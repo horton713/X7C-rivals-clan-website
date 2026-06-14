@@ -176,6 +176,7 @@ document.addEventListener('DOMContentLoaded', () => {
     renderTBoard();
   }, (error) => {
     console.error("監聽名單與 T榜錯誤:", error);
+    rosterGrid.innerHTML = `<div style="color: red; grid-column: 1 / -1;">資料庫連線錯誤：${error.message}<br>如果是權限問題，請檢查 Firebase Console 的 Security Rules。</div>`;
   });
 
   // 儲存至雲端的函式
