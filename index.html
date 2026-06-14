@@ -1,0 +1,206 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>X7C | Rivals 戰隊</title>
+  
+  <!-- 引入 Google Fonts (Inter) -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;800;900&display=swap" rel="stylesheet">
+  
+  <link rel="stylesheet" href="style.css?v=3">
+</head>
+<body>
+
+  <!-- 進度條 -->
+  <div id="scroll-bar"></div>
+
+  <!-- 導覽列 -->
+  <nav class="navbar">
+    <div class="nav-container">
+      <a href="#" class="logo">X7C</a>
+      <ul class="nav-links">
+        <li><a href="#about">關於我們</a></li>
+        <li><a href="#features">戰隊特色</a></li>
+        <li><a href="#roster">成員名單</a></li>
+        <li><a href="#tboard">實力 T榜</a></li>
+        <li><a href="#comments">留言板</a></li>
+        <li class="auth-section" style="margin-left: 20px;">
+          <button id="loginBtn" class="btn-primary outline" style="padding: 5px 15px; font-size: 0.8rem;">Google 登入</button>
+          <div id="userInfo" style="display: none; align-items: center; gap: 10px;">
+            <img id="userPhoto" src="" alt="Avatar" style="width: 30px; height: 30px; border-radius: 50%;">
+            <span id="userName" style="font-size: 0.85rem; color: #fff;"></span>
+            <button id="logoutBtn" class="btn-primary" style="padding: 5px 10px; font-size: 0.8rem; background: #333; border-color: #333;">登出</button>
+          </div>
+        </li>
+      </ul>
+    </div>
+  </nav>
+
+  <!-- 英雄區塊 (Hero) -->
+  <header class="hero" id="home">
+    <div class="hero-content reveal">
+      <img src="logo.png" alt="X7C RIVALS" class="hero-logo">
+      <p>巔峰對決，絕對主宰。</p>
+      <a href="#about" class="btn-primary">探索更多</a>
+    </div>
+    <!-- 裝飾用背景元素 -->
+    <div class="bg-glow"></div>
+  </header>
+
+  <!-- 戰隊介紹 -->
+  <section class="section" id="about">
+    <div class="container reveal">
+      <div class="card">
+        <h2 class="section-title">關於 X7C</h2>
+        <p>
+          這裡是屬於最頂尖競爭者的戰場。我們不僅僅是一個 Roblox Rivals 戰隊，我們是一群追求極致操作與完美配合的玩家。<br><br>
+          我們專注於競爭、進步，並致力於打造最強的遊戲社群。如果你準備好挑戰自己的極限，X7C 就是你的歸屬。
+        </p>
+      </div>
+    </div>
+  </section>
+
+  <!-- 戰隊特色 -->
+  <section class="section" id="features">
+    <div class="container">
+      <h2 class="section-title text-center reveal">為什麼選擇我們</h2>
+      <div class="features-grid">
+        <div class="feature-card reveal" style="transition-delay: 100ms;">
+          <div class="icon">⚡</div>
+          <h3>頂尖實力</h3>
+          <p>與同樣熱愛 Rivals 的強者並肩作戰，隨時都有隊友與你一起瘋狂上分。</p>
+        </div>
+        <div class="feature-card reveal" style="transition-delay: 200ms;">
+          <div class="icon">🏆</div>
+          <h3>階級制度</h3>
+          <p>公平的實力考核與 T 榜分級，讓每一份努力都能獲得相對應的榮耀與位置。</p>
+        </div>
+
+      </div>
+    </div>
+  </section>
+
+  <!-- 成員名單 -->
+  <section class="section" id="roster">
+    <div class="container text-center">
+      <h2 class="section-title reveal">核心陣容</h2>
+      <p class="subtitle reveal">由各路高手組成的菁英團隊。</p>
+      
+      <button id="editRosterBtn" class="btn-primary outline reveal" style="padding: 10px 20px; font-size: 0.9rem; margin-bottom: 30px;">⚙️ 管理名單</button>
+      
+      <div class="roster-grid" id="roster-grid">
+        <!-- 名單將由 JavaScript 動態生成 -->
+      </div>
+    </div>
+  </section>
+
+  <!-- T榜 -->
+  <section class="section" id="tboard" style="background: #050505;">
+    <div class="container text-center">
+      <h2 class="section-title reveal">🏆 實力 T榜</h2>
+      <p class="subtitle reveal">X7C 的實力階級證明。T0 為最高榮耀。</p>
+      
+      <button id="editTBoardBtn" class="btn-primary outline reveal" style="padding: 10px 20px; font-size: 0.9rem; margin-bottom: 30px;">⚙️ 管理 T榜</button>
+      
+      <!-- T榜將依據階級分層顯示 -->
+      <div id="tboard-container">
+        <!-- 內容由 JS 產生 -->
+      </div>
+    </div>
+  </section>
+
+  <!-- 留言板 -->
+  <section class="section" id="comments" style="background: #111;">
+    <div class="container text-center">
+      <h2 class="section-title reveal">💬 即時留言板</h2>
+      <p class="subtitle reveal">歡迎各位高手交流與討論！</p>
+      
+      <!-- 管理員專用控制區 -->
+      <div id="adminChatControls" style="display: none; margin-bottom: 15px;">
+        <button id="clearCommentsBtn" class="btn-primary outline" style="padding: 5px 15px; font-size: 0.8rem; color: #ff4d4d; border-color: #ff4d4d;">🗑️ 清除所有留言</button>
+      </div>
+
+      <div class="chat-container reveal">
+        <!-- 顯示留言 -->
+        <div id="comments-list" class="comments-list">
+          <!-- JS 渲染 -->
+        </div>
+        
+        <!-- 輸入框 -->
+        <div class="chat-input-area">
+          <div id="loginPrompt" style="color: #888; font-size: 0.9rem; padding: 10px; text-align: center;">請先使用右上角 Google 登入才能留言喔！</div>
+          <div id="inputControls" style="display: none; gap: 10px; align-items: stretch;">
+            <textarea id="commentInput" placeholder="輸入您的留言..." rows="2" style="flex: 1; resize: none;"></textarea>
+            <button id="sendCommentBtn" class="btn-primary" style="padding: 0 20px;">送出</button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+
+
+  <!-- 頁腳 -->
+  <footer>
+    <div class="container text-center">
+      <p class="logo-text">X7C</p>
+      <p class="copyright">© 2026 X7C Rivals Clan. All rights reserved.</p>
+    </div>
+  </footer>
+
+  <!-- 編輯名單 Modal -->
+  <div id="rosterModal" class="modal">
+    <div class="modal-content card">
+      <span class="close-btn" id="closeRosterModal">&times;</span>
+      <h2>新增成員</h2>
+      <div class="form-group">
+        <label>職位</label>
+        <select id="memberRole">
+          <option value="團長">團長</option>
+          <option value="副團長">副團長</option>
+          <option value="管理員">管理員</option>
+          <option value="考官">考官</option>
+          <option value="核心成員">核心成員</option>
+          <option value="成員">成員</option>
+        </select>
+      </div>
+      <div class="form-group">
+        <label>遊戲 ID</label>
+        <input type="text" id="memberName" placeholder="輸入玩家 ID">
+      </div>
+      <button id="addMemberBtn" class="btn-primary" style="width: 100%;">新增</button>
+      <p style="margin-top: 20px; font-size: 0.85rem; color: #888;">提示：點擊卡片右上角的 X 可以刪除成員。</p>
+    </div>
+  </div>
+
+  <!-- 編輯 T榜 Modal -->
+  <div id="tboardModal" class="modal">
+    <div class="modal-content card">
+      <span class="close-btn" id="closeTBoardModal">&times;</span>
+      <h2>新增 T榜 玩家</h2>
+      <div class="form-group">
+        <label>實力階級 (Tier)</label>
+        <select id="tboardTier">
+          <option value="T0">T0 (最強)</option>
+          <option value="T0.5">T0.5</option>
+          <option value="T1">T1</option>
+          <option value="T2">T2</option>
+          <option value="T3">T3</option>
+          <option value="T4">T4</option>
+        </select>
+      </div>
+      <div class="form-group">
+        <label>遊戲 ID</label>
+        <input type="text" id="tboardName" placeholder="輸入玩家 ID">
+      </div>
+      <button id="addTBoardBtn" class="btn-primary" style="width: 100%;">新增</button>
+      <p style="margin-top: 20px; font-size: 0.85rem; color: #888;">提示：同階級的玩家會自動排列在一起。</p>
+    </div>
+  </div>
+
+  <script type="module" src="main.js?v=11"></script>
+</body>
+</html>
