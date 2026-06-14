@@ -1,6 +1,6 @@
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
 import { getAuth, signInWithPopup, GoogleAuthProvider, signOut, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
-import { getFirestore, collection, addDoc, onSnapshot, query, orderBy, serverTimestamp, getDocs, deleteDoc, doc } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
+import { getFirestore, collection, addDoc, onSnapshot, query, orderBy, serverTimestamp, getDocs, deleteDoc, doc, setDoc } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
 
 // Your web app's Firebase configuration
 const firebaseConfig = {
@@ -151,23 +151,55 @@ document.addEventListener('DOMContentLoaded', () => {
   });
 
   /* ===================== */
-  /* Roster Management     */
+  /* Realtime Data Sync    */
   /* ===================== */
-  const defaultRoster = [
-    { role: '團長', name: 'VRXZ_ZHUTI' },
-    { role: '副團長', name: 'VRXZ_303' },
-    { role: '管理員', name: 'VRXZ_Bhfhggfg' },
-    { role: '考官', name: 'VRXZ_cockroach' }
-  ];
-
-  let roster = JSON.parse(localStorage.getItem('x7c_roster'));
-  if (!roster) {
-    roster = defaultRoster;
-    localStorage.setItem('x7c_roster', JSON.stringify(roster));
-  }
-
+  let roster = [];
+  let tboard = [];
+  
   const rosterGrid = document.getElementById('roster-grid');
   let isEditMode = false;
+  const tboardContainer = document.getElementById('tboard-container');
+  let isTBoardEditMode = false;
+
+  // 監聽雲端資料變化 (自動同步)
+  onSnapshot(doc(db, "siteData", "lists"), (docSnap) => {
+    if (docSnap.exists()) {
+      const data = docSnap.data();
+      if (data.roster) roster = data.roster;
+      if (data.tboard) tboard = data.tboard;
+    } else {
+      // 若文件不存在，可選擇初始化為空陣列
+      setDoc(doc(db, "siteData", "lists"), { roster: [], tboard: [] });
+    }
+    // 資料更新後重新渲染畫面
+    renderRoster();
+    renderTBoard();
+  }, (error) => {
+    console.error("監聽名單與 T榜錯誤:", error);
+  });
+
+  // 儲存至雲端的函式
+  async function saveRoster() {
+    try {
+      await setDoc(doc(db, "siteData", "lists"), { roster: roster }, { merge: true });
+    } catch(e) {
+      console.error("儲存名單失敗:", e);
+      alert("儲存名單失敗，請檢查權限！");
+    }
+  }
+
+  async function saveTBoard() {
+    try {
+      await setDoc(doc(db, "siteData", "lists"), { tboard: tboard }, { merge: true });
+    } catch(e) {
+      console.error("儲存 T榜失敗:", e);
+      alert("儲存 T榜失敗，請檢查權限！");
+    }
+  }
+
+  /* ===================== */
+  /* Roster Management     */
+  /* ===================== */
 
   function renderRoster() {
     rosterGrid.innerHTML = '';
@@ -191,13 +223,11 @@ document.addEventListener('DOMContentLoaded', () => {
       btn.addEventListener('click', (e) => {
         const idx = e.target.getAttribute('data-index');
         roster.splice(idx, 1);
-        localStorage.setItem('x7c_roster', JSON.stringify(roster));
-        renderRoster();
+        saveRoster();
       });
     });
   }
 
-  renderRoster();
 
   /* ===================== */
   /* Modal & Edit Logic    */
@@ -240,9 +270,8 @@ document.addEventListener('DOMContentLoaded', () => {
 
     if (name) {
       roster.push({ role, name });
-      localStorage.setItem('x7c_roster', JSON.stringify(roster));
+      saveRoster();
       document.getElementById('memberName').value = ''; // 清空輸入框
-      renderRoster();
       modal.classList.remove('show'); // 新增後關閉 Modal (可選)
     } else {
       alert('請輸入玩家 ID！');
@@ -252,22 +281,6 @@ document.addEventListener('DOMContentLoaded', () => {
   /* ===================== */
   /* T-Board Management    */
   /* ===================== */
-  const defaultTBoard = [
-    { tier: 'T0', name: 'Legendary_Player' },
-    { tier: 'T0.5', name: 'Pro_Gamer' },
-    { tier: 'T1', name: 'Elite_Member' },
-    { tier: 'T2', name: 'Rising_Star' }
-  ];
-
-  let tboard = JSON.parse(localStorage.getItem('x7c_tboard'));
-  if (!tboard) {
-    tboard = defaultTBoard;
-    localStorage.setItem('x7c_tboard', JSON.stringify(tboard));
-  }
-
-  const tboardContainer = document.getElementById('tboard-container');
-  let isTBoardEditMode = false;
-
   // 定義 Tier 順序以便排序
   const tierOrder = { 'T0': 0, 'T0.5': 1, 'T1': 2, 'T2': 3, 'T3': 4, 'T4': 5 };
 
@@ -321,13 +334,11 @@ document.addEventListener('DOMContentLoaded', () => {
       btn.addEventListener('click', (e) => {
         const idx = e.target.getAttribute('data-index');
         tboard.splice(idx, 1);
-        localStorage.setItem('x7c_tboard', JSON.stringify(tboard));
-        renderTBoard();
+        saveTBoard();
       });
     });
   }
 
-  renderTBoard();
 
   /* ===================== */
   /* T-Board Modal Logic   */
@@ -366,9 +377,8 @@ document.addEventListener('DOMContentLoaded', () => {
 
     if (name) {
       tboard.push({ tier, name });
-      localStorage.setItem('x7c_tboard', JSON.stringify(tboard));
+      saveTBoard();
       document.getElementById('tboardName').value = '';
-      renderTBoard();
       tboardModal.classList.remove('show');
     } else {
       alert('請輸入玩家 ID！');
