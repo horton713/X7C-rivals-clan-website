@@ -81,11 +81,13 @@ document.addEventListener('DOMContentLoaded', () => {
         if(editTBoardBtn) editTBoardBtn.style.display = 'inline-block';
         if(adminChatControls) adminChatControls.style.display = 'block';
         if(postComposer) postComposer.style.display = 'block';
+        document.querySelectorAll('.admin-delete-btn').forEach(btn => btn.style.display = 'block');
       } else {
         if(editRosterBtn) editRosterBtn.style.display = 'none';
         if(editTBoardBtn) editTBoardBtn.style.display = 'none';
         if(adminChatControls) adminChatControls.style.display = 'none';
         if(postComposer) postComposer.style.display = 'none';
+        document.querySelectorAll('.admin-delete-btn').forEach(btn => btn.style.display = 'none');
       }
     } else {
       // 未登入狀態
@@ -101,6 +103,7 @@ document.addEventListener('DOMContentLoaded', () => {
       if(editTBoardBtn) editTBoardBtn.style.display = 'none';
       if(adminChatControls) adminChatControls.style.display = 'none';
       if(postComposer) postComposer.style.display = 'none';
+      document.querySelectorAll('.admin-delete-btn').forEach(btn => btn.style.display = 'none');
     }
   });
 
@@ -594,7 +597,8 @@ document.addEventListener('DOMContentLoaded', () => {
 
         // 刪除按鈕 (僅限管理員)
         const isPostAdmin = currentUser && currentUser.email && adminEmails.includes(currentUser.email.toLowerCase());
-        const deleteBtnHtml = isPostAdmin ? `<button class="delete-post-btn" data-post-id="${documentSnapshot.id}" title="刪除貼文">🗑️</button>` : '';
+        const displayStyle = isPostAdmin ? 'block' : 'none';
+        const deleteBtnHtml = `<button class="delete-post-btn admin-delete-btn" style="display: ${displayStyle};" data-post-id="${documentSnapshot.id}" title="刪除貼文">🗑️</button>`;
 
         // 圖片渲染
         let imageHtml = '';
