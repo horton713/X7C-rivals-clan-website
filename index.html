@@ -122,6 +122,22 @@
       <!-- 管理員發文器 -->
       <div id="post-composer" style="display: none; background: #1a1a1a; padding: 20px; border-radius: 12px; margin-bottom: 30px; border: 1px solid #333;">
         <textarea id="postInput" placeholder="有什麼新消息想跟成員們分享？" style="width: 100%; height: 80px; background: transparent; color: white; border: none; border-bottom: 1px solid #555; resize: none; padding: 10px; font-size: 1rem; margin-bottom: 15px; outline: none;"></textarea>
+        
+        <div id="post-options" style="margin-bottom: 15px;">
+          <input type="text" id="postImageUrl" placeholder="📷 圖片網址 (選填)" style="width: 100%; background: transparent; color: white; border: 1px solid #555; padding: 8px; margin-bottom: 10px; border-radius: 4px; outline: none;">
+          
+          <div id="poll-creator" style="background: #222; padding: 10px; border-radius: 4px; border: 1px solid #444;">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px;">
+              <span style="color: #aaa; font-size: 0.9rem;">📊 投票選項 (選填，若不需要投票請保持空白)</span>
+              <button id="addPollOptionBtn" class="btn-primary outline" style="padding: 2px 8px; font-size: 0.8rem;">+ 新增選項</button>
+            </div>
+            <div id="poll-options-container" style="display: flex; flex-direction: column; gap: 8px;">
+              <input type="text" class="poll-option-input" placeholder="選項 1" style="width: 100%; background: #111; color: white; border: 1px solid #555; padding: 6px; border-radius: 4px; outline: none;">
+              <input type="text" class="poll-option-input" placeholder="選項 2" style="width: 100%; background: #111; color: white; border: 1px solid #555; padding: 6px; border-radius: 4px; outline: none;">
+            </div>
+          </div>
+        </div>
+
         <div style="text-align: right;">
           <button id="submitPostBtn" class="btn-primary">發佈貼文</button>
         </div>

@@ -1,6 +1,6 @@
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
 import { getAuth, signInWithPopup, GoogleAuthProvider, signOut, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
-import { getFirestore, collection, addDoc, onSnapshot, query, orderBy, serverTimestamp, getDocs, deleteDoc, doc, setDoc } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
+import { getFirestore, collection, addDoc, onSnapshot, query, orderBy, serverTimestamp, getDocs, deleteDoc, doc, setDoc, updateDoc, getDoc } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
 
 // Your web app's Firebase configuration
 const firebaseConfig = {
@@ -496,7 +496,23 @@ document.addEventListener('DOMContentLoaded', () => {
   /* ===================== */
   const submitPostBtn = document.getElementById('submitPostBtn');
   const postInput = document.getElementById('postInput');
+  const postImageUrl = document.getElementById('postImageUrl');
   const postsFeed = document.getElementById('posts-feed');
+  const addPollOptionBtn = document.getElementById('addPollOptionBtn');
+  const pollOptionsContainer = document.getElementById('poll-options-container');
+
+  // 0. 新增投票選項按鈕邏輯
+  if (addPollOptionBtn && pollOptionsContainer) {
+    addPollOptionBtn.addEventListener('click', () => {
+      const optionCount = pollOptionsContainer.children.length + 1;
+      const input = document.createElement('input');
+      input.type = 'text';
+      input.className = 'poll-option-input';
+      input.placeholder = `選項 ${optionCount}`;
+      input.style = 'width: 100%; background: #111; color: white; border: 1px solid #555; padding: 6px; border-radius: 4px; outline: none; margin-top: 8px;';
+      pollOptionsContainer.appendChild(input);
+    });
+  }
 
   // 1. 發佈貼文
   if (submitPostBtn && postInput) {
@@ -507,19 +523,48 @@ document.addEventListener('DOMContentLoaded', () => {
         return;
       }
       
+      const imageUrl = postImageUrl ? postImageUrl.value.trim() : '';
+      
+      const pollOptions = [];
+      if (pollOptionsContainer) {
+        const inputs = pollOptionsContainer.querySelectorAll('.poll-option-input');
+        inputs.forEach(input => {
+          if (input.value.trim() !== '') {
+            pollOptions.push({ text: input.value.trim(), votes: [] });
+          }
+        });
+      }
+
       try {
         submitPostBtn.disabled = true;
         submitPostBtn.innerText = '發佈中...';
         
-        await addDoc(collection(db, "posts"), {
+        const postData = {
           content: content,
           authorName: currentUser.displayName || currentUser.email.split('@')[0],
           authorPhoto: currentUser.photoURL || null,
           authorEmail: currentUser.email,
           timestamp: serverTimestamp()
-        });
+        };
+
+        if (imageUrl !== '') {
+          postData.imageUrl = imageUrl;
+        }
+
+        if (pollOptions.length >= 2) {
+          postData.pollOptions = pollOptions;
+        }
+        
+        await addDoc(collection(db, "posts"), postData);
         
         postInput.value = '';
+        if (postImageUrl) postImageUrl.value = '';
+        if (pollOptionsContainer) {
+          pollOptionsContainer.innerHTML = `
+            <input type="text" class="poll-option-input" placeholder="選項 1" style="width: 100%; background: #111; color: white; border: 1px solid #555; padding: 6px; border-radius: 4px; outline: none;">
+            <input type="text" class="poll-option-input" placeholder="選項 2" style="width: 100%; background: #111; color: white; border: 1px solid #555; padding: 6px; border-radius: 4px; outline: none; margin-top: 8px;">
+          `;
+        }
       } catch (e) {
         console.error("發佈貼文失敗: ", e);
         alert("發佈貼文失敗！");
@@ -530,7 +575,7 @@ document.addEventListener('DOMContentLoaded', () => {
     });
   }
 
-  // 2. 即時讀取貼文
+  // 2. 即時讀取貼文與渲染
   if (postsFeed) {
     const qPosts = query(collection(db, "posts"), orderBy("timestamp", "desc"));
     onSnapshot(qPosts, (snapshot) => {
@@ -541,10 +586,60 @@ document.addEventListener('DOMContentLoaded', () => {
         const timeString = dateObj.toLocaleString();
         const photoUrl = post.authorPhoto || 'logo.png';
         
-        // 如果是特定帳號 (Hortonchang@gmail.com)，不顯示真實頭像
+        // 特定帳號不顯示真實頭像
         let avatarHtml = `<img src="${photoUrl}" alt="Avatar" class="post-avatar">`;
         if (post.authorEmail && post.authorEmail.toLowerCase() === 'hortonchang@gmail.com') {
           avatarHtml = `<div class="post-avatar" style="background: #333; display: flex; align-items: center; justify-content: center; font-size: 1rem; font-weight: bold; color: #fff;">H</div>`;
+        }
+
+        // 刪除按鈕 (僅限管理員)
+        const isPostAdmin = currentUser && currentUser.email && adminEmails.includes(currentUser.email.toLowerCase());
+        const deleteBtnHtml = isPostAdmin ? `<button class="delete-post-btn" data-post-id="${documentSnapshot.id}" title="刪除貼文">🗑️</button>` : '';
+
+        // 圖片渲染
+        let imageHtml = '';
+        if (post.imageUrl) {
+          imageHtml = `<img src="${post.imageUrl}" class="post-image" alt="Post Image">`;
+        }
+
+        // 投票渲染
+        let pollHtml = '';
+        if (post.pollOptions && post.pollOptions.length > 0) {
+          let totalVotes = 0;
+          let userVoted = false;
+          post.pollOptions.forEach(opt => {
+            totalVotes += opt.votes.length;
+            if (currentUser && opt.votes.includes(currentUser.email)) {
+              userVoted = true;
+            }
+          });
+
+          let pollOptionsHtml = '';
+          post.pollOptions.forEach((opt, idx) => {
+            if (userVoted || !currentUser) {
+              // 顯示長條圖
+              const percentage = totalVotes === 0 ? 0 : Math.round((opt.votes.length / totalVotes) * 100);
+              pollOptionsHtml += `
+                <div class="poll-result-item">
+                  <div class="poll-result-label">
+                    <span>${opt.text} ${opt.votes.includes(currentUser?.email) ? '✅' : ''}</span>
+                    <span>${percentage}%</span>
+                  </div>
+                  <div class="poll-result-bar-bg">
+                    <div class="poll-result-bar-fill" style="width: ${percentage}%"></div>
+                  </div>
+                </div>
+              `;
+            } else {
+              // 顯示可投票按鈕
+              pollOptionsHtml += `
+                <button class="poll-option-btn" data-post-id="${documentSnapshot.id}" data-option-idx="${idx}">${opt.text}</button>
+              `;
+            }
+          });
+
+          let voteCountHtml = `<div style="font-size: 0.8rem; color: #888; margin-top: 10px; text-align: right;">總共 ${totalVotes} 票</div>`;
+          pollHtml = `<div class="poll-container">${pollOptionsHtml}${voteCountHtml}</div>`;
         }
 
         const card = document.createElement('div');
@@ -556,14 +651,75 @@ document.addEventListener('DOMContentLoaded', () => {
               <span class="post-author">${post.authorName}</span>
               <span class="post-time">${timeString}</span>
             </div>
+            ${deleteBtnHtml}
           </div>
           <div class="post-content">${post.content}</div>
+          ${imageHtml}
+          ${pollHtml}
         `;
         postsFeed.appendChild(card);
       });
     }, (error) => {
       console.error("讀取貼文失敗: ", error);
       postsFeed.innerHTML = `<div style="color:red; text-align:center;">貼文載入失敗：${error.message}</div>`;
+    });
+
+    // 3. 事件委派：處理刪除與投票
+    postsFeed.addEventListener('click', async (e) => {
+      // 刪除貼文
+      if (e.target.classList.contains('delete-post-btn')) {
+        const postId = e.target.getAttribute('data-post-id');
+        if (confirm("警告：您確定要刪除這篇貼文嗎？")) {
+          try {
+            await deleteDoc(doc(db, "posts", postId));
+          } catch(err) {
+            console.error("刪除失敗", err);
+            alert("刪除失敗！");
+          }
+        }
+      }
+
+      // 進行投票
+      if (e.target.classList.contains('poll-option-btn')) {
+        if (!currentUser) {
+          alert("請先登入才能投票！");
+          return;
+        }
+        
+        const postId = e.target.getAttribute('data-post-id');
+        const optionIdx = parseInt(e.target.getAttribute('data-option-idx'));
+        
+        try {
+          // 鎖定按鈕防止連點
+          e.target.disabled = true;
+          e.target.innerText = '投票中...';
+
+          const postRef = doc(db, "posts", postId);
+          const postSnap = await getDoc(postRef);
+          
+          if (postSnap.exists()) {
+            const postData = postSnap.data();
+            const pollOptions = postData.pollOptions;
+            
+            // 防呆：再檢查一次是否投過
+            let hasVoted = false;
+            pollOptions.forEach(opt => {
+              if (opt.votes.includes(currentUser.email)) hasVoted = true;
+            });
+
+            if (!hasVoted) {
+              pollOptions[optionIdx].votes.push(currentUser.email);
+              await updateDoc(postRef, { pollOptions: pollOptions });
+            } else {
+              alert("您已經投過票囉！");
+            }
+          }
+        } catch(err) {
+          console.error("投票失敗", err);
+          alert("投票失敗，請稍後再試。");
+          e.target.disabled = false;
+        }
+      }
     });
   }
 
