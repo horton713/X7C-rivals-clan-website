@@ -710,3 +710,65 @@ footer {
   border-color: #666;
 }
 
+
+/* ===================== */
+/* Posts Section         */
+/* ===================== */
+.posts-feed {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+  max-width: 700px;
+  margin: 0 auto;
+}
+
+.post-card {
+  background: #1a1a1a;
+  border-radius: 12px;
+  padding: 20px;
+  border: 1px solid #333;
+  text-align: left;
+  transition: transform 0.3s ease;
+}
+
+.post-card:hover {
+  transform: translateY(-2px);
+  border-color: #555;
+}
+
+.post-header {
+  display: flex;
+  align-items: center;
+  gap: 15px;
+  margin-bottom: 15px;
+}
+
+.post-avatar {
+  width: 45px;
+  height: 45px;
+  border-radius: 50%;
+  object-fit: cover;
+}
+
+.post-info {
+  display: flex;
+  flex-direction: column;
+}
+
+.post-author {
+  font-weight: 700;
+  color: #fff;
+  font-size: 1rem;
+}
+
+.post-time {
+  font-size: 0.8rem;
+  color: #888;
+}
+
+.post-content {
+  color: #ddd;
+  line-height: 1.6;
+  font-size: 1rem;
+  white-space: pre-wrap;
+}

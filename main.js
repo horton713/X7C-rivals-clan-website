@@ -61,6 +61,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const loginPrompt = document.getElementById('loginPrompt');
     const inputControls = document.getElementById('inputControls');
     const adminChatControls = document.getElementById('adminChatControls');
+    const postComposer = document.getElementById('post-composer');
 
     if (user) {
       // 登入狀態
@@ -79,10 +80,12 @@ document.addEventListener('DOMContentLoaded', () => {
         if(editRosterBtn) editRosterBtn.style.display = 'inline-block';
         if(editTBoardBtn) editTBoardBtn.style.display = 'inline-block';
         if(adminChatControls) adminChatControls.style.display = 'block';
+        if(postComposer) postComposer.style.display = 'block';
       } else {
         if(editRosterBtn) editRosterBtn.style.display = 'none';
         if(editTBoardBtn) editTBoardBtn.style.display = 'none';
         if(adminChatControls) adminChatControls.style.display = 'none';
+        if(postComposer) postComposer.style.display = 'none';
       }
     } else {
       // 未登入狀態
@@ -97,6 +100,7 @@ document.addEventListener('DOMContentLoaded', () => {
       if(editRosterBtn) editRosterBtn.style.display = 'none';
       if(editTBoardBtn) editTBoardBtn.style.display = 'none';
       if(adminChatControls) adminChatControls.style.display = 'none';
+      if(postComposer) postComposer.style.display = 'none';
     }
   });
 
@@ -484,6 +488,82 @@ document.addEventListener('DOMContentLoaded', () => {
           clearCommentsBtn.innerText = '🗑️ 清除所有留言';
         }
       }
+    });
+  }
+
+  /* ===================== */
+  /* Posts Board (貼文區)  */
+  /* ===================== */
+  const submitPostBtn = document.getElementById('submitPostBtn');
+  const postInput = document.getElementById('postInput');
+  const postsFeed = document.getElementById('posts-feed');
+
+  // 1. 發佈貼文
+  if (submitPostBtn && postInput) {
+    submitPostBtn.addEventListener('click', async () => {
+      const content = postInput.value.trim();
+      if (!content) {
+        alert("請輸入貼文內容！");
+        return;
+      }
+      
+      try {
+        submitPostBtn.disabled = true;
+        submitPostBtn.innerText = '發佈中...';
+        
+        await addDoc(collection(db, "posts"), {
+          content: content,
+          authorName: currentUser.displayName || currentUser.email.split('@')[0],
+          authorPhoto: currentUser.photoURL || null,
+          authorEmail: currentUser.email,
+          timestamp: serverTimestamp()
+        });
+        
+        postInput.value = '';
+      } catch (e) {
+        console.error("發佈貼文失敗: ", e);
+        alert("發佈貼文失敗！");
+      } finally {
+        submitPostBtn.disabled = false;
+        submitPostBtn.innerText = '發佈貼文';
+      }
+    });
+  }
+
+  // 2. 即時讀取貼文
+  if (postsFeed) {
+    const qPosts = query(collection(db, "posts"), orderBy("timestamp", "desc"));
+    onSnapshot(qPosts, (snapshot) => {
+      postsFeed.innerHTML = '';
+      snapshot.forEach((documentSnapshot) => {
+        const post = documentSnapshot.data();
+        const dateObj = post.timestamp ? post.timestamp.toDate() : new Date();
+        const timeString = dateObj.toLocaleString();
+        const photoUrl = post.authorPhoto || 'logo.png';
+        
+        // 如果是特定帳號 (Hortonchang@gmail.com)，不顯示真實頭像
+        let avatarHtml = `<img src="${photoUrl}" alt="Avatar" class="post-avatar">`;
+        if (post.authorEmail && post.authorEmail.toLowerCase() === 'hortonchang@gmail.com') {
+          avatarHtml = `<div class="post-avatar" style="background: #333; display: flex; align-items: center; justify-content: center; font-size: 1rem; font-weight: bold; color: #fff;">H</div>`;
+        }
+
+        const card = document.createElement('div');
+        card.className = 'post-card';
+        card.innerHTML = `
+          <div class="post-header">
+            ${avatarHtml}
+            <div class="post-info">
+              <span class="post-author">${post.authorName}</span>
+              <span class="post-time">${timeString}</span>
+            </div>
+          </div>
+          <div class="post-content">${post.content}</div>
+        `;
+        postsFeed.appendChild(card);
+      });
+    }, (error) => {
+      console.error("讀取貼文失敗: ", error);
+      postsFeed.innerHTML = `<div style="color:red; text-align:center;">貼文載入失敗：${error.message}</div>`;
     });
   }
 
