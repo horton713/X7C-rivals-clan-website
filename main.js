@@ -642,7 +642,11 @@ document.addEventListener('DOMContentLoaded', () => {
             }
           });
 
-          let voteCountHtml = `<div style="font-size: 0.8rem; color: #888; margin-top: 10px; text-align: right;">總共 ${totalVotes} 票</div>`;
+          let cancelVoteHtml = '';
+          if (userVoted) {
+            cancelVoteHtml = `<button class="cancel-vote-btn" data-post-id="${documentSnapshot.id}" style="background: transparent; border: 1px solid #ff4d4d; color: #ff4d4d; border-radius: 4px; padding: 2px 8px; font-size: 0.8rem; cursor: pointer; margin-left: 10px;">重新投票</button>`;
+          }
+          let voteCountHtml = `<div style="font-size: 0.8rem; color: #888; margin-top: 10px; display: flex; justify-content: flex-end; align-items: center;"><span>總共 ${totalVotes} 票</span> ${cancelVoteHtml}</div>`;
           pollHtml = `<div class="poll-container">${pollOptionsHtml}${voteCountHtml}</div>`;
         }
 
@@ -721,6 +725,36 @@ document.addEventListener('DOMContentLoaded', () => {
         } catch(err) {
           console.error("投票失敗", err);
           alert("投票失敗，請稍後再試。");
+          e.target.disabled = false;
+        }
+      }
+
+      // 重新投票 (取消投票)
+      if (e.target.classList.contains('cancel-vote-btn')) {
+        if (!currentUser) return;
+        const postId = e.target.getAttribute('data-post-id');
+        
+        try {
+          e.target.disabled = true;
+          e.target.innerText = '處理中...';
+
+          const postRef = doc(db, "posts", postId);
+          const postSnap = await getDoc(postRef);
+          
+          if (postSnap.exists()) {
+            const postData = postSnap.data();
+            const pollOptions = postData.pollOptions;
+            
+            // 將目前使用者的 email 從所有選項中移除
+            pollOptions.forEach(opt => {
+              opt.votes = opt.votes.filter(email => email !== currentUser.email);
+            });
+
+            await updateDoc(postRef, { pollOptions: pollOptions });
+          }
+        } catch(err) {
+          console.error("取消投票失敗", err);
+          alert("取消投票失敗！");
           e.target.disabled = false;
         }
       }
